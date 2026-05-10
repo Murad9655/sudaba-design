@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Giriş | Admin Panel</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body class="admin-body" style="justify-content: center; align-items: center;">
+
+    <div class="login-container">
+        <h2 style="margin-bottom: 20px; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Firebase Giriş</h2>
+        <form id="loginForm">
+            <input type="text" id="username" placeholder="İstifadəçi adı (məs: Murad96)" style="width: 100%; padding: 12px; margin-bottom: 15px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff;" required>
+            <input type="password" id="password" placeholder="Şifrə" style="width: 100%; padding: 12px; margin-bottom: 20px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff;" required>
+            <button type="submit" class="admin-btn-save" style="width: 100%;">Daxil ol</button>
+        </form>
+        <p id="errorMsg" style="color: #f87171; margin-top: 15px; font-size: 0.9rem; display: none;"></p>
+        <p style="margin-top: 20px; font-size: 0.7rem; color: var(--text-muted);">*Firebase Console-dan yaratdığınız məlumatları daxil edin.</p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB7OScQBGmIm0B7KnXr64ANZsAJ5BQcI5A",
+            authDomain: "mywebsite-3d84d.firebaseapp.com",
+            projectId: "mywebsite-3d84d",
+            storageBucket: "mywebsite-3d84d.firebasestorage.app",
+            messagingSenderId: "541643962659",
+            appId: "1:541643962659:web:7666eb6830b5c48b217496",
+            measurementId: "G-TY3CFBFJ5M"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMsg');
+
+            // Firebase-ə email lazımdır, ona görə username-in sonuna @domain.com əlavə edirik
+            const email = user.includes('@') ? user : user + "@admin.com";
+
+            signInWithEmailAndPassword(auth, email, pass)
+                .then((userCredential) => {
+                    window.location.href = 'admin.html';
+                })
+                .catch((error) => {
+                    errorMsg.style.display = 'block';
+                    errorMsg.textContent = "Giriş xətası: " + error.code;
+                });
+        });
+    </script>
+</body>
+</html>

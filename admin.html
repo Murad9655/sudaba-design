@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="az">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Dashboard | Admin Panel</title>
+    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-bg: #0f172a;
+            --main-bg: #020617;
+            --card-bg: #1e293b;
+            --primary: #00f2fe;
+            --accent: #4facfe;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--main-bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .admin-sidebar {
+            width: 280px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand {
+            padding: 40px 30px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-brand h2 {
+            color: var(--primary);
+            margin: 0;
+            font-size: 1.5rem;
+            letter-spacing: 3px;
+        }
+
+        .sidebar-brand span {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        .sidebar-nav {
+            padding: 20px 15px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .admin-tab {
+            padding: 12px 20px;
+            border-radius: 12px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .admin-tab i {
+            width: 20px;
+            font-size: 1.1rem;
+        }
+
+        .admin-tab:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        .admin-tab.active {
+            background: var(--primary);
+            color: #000;
+            font-weight: 700;
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.3);
+        }
+
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .admin-logout {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ef444455;
+            background: transparent;
+            color: #ef4444;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .admin-logout:hover {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        /* Main Content */
+        .admin-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .admin-top-bar {
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            z-index: 10;
+        }
+
+        .top-bar-info h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        #adminUserEmail {
+            margin: 5px 0 0;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+
+        .btn-save-floating {
+            background: var(--primary);
+            color: #000;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.3s;
+        }
+
+        .btn-save-floating:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 242, 254, 0.3);
+        }
+
+        .admin-content-container {
+            padding: 30px;
+            overflow-y: auto;
+            flex: 1;
+            background: var(--main-bg);
+        }
+
+        .admin-content {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: none;
+        }
+
+        .admin-content.active {
+            display: block;
+        }
+
+        .section-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid var(--border);
+            margin-bottom: 30px;
+        }
+
+        .card-header {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .field label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input,
+        textarea {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 12px 15px;
+            border-radius: 10px;
+            outline: none;
+            transition: 0.3s;
+            font-size: 0.95rem;
+            width: 100%;
+        }
+
+        input:focus,
+        textarea:focus {
+            border-color: var(--primary);
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .btn-add {
+            background: var(--primary);
+            color: #000;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .items-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .list-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 15px;
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+        }
+
+        .item-inputs {
+            flex: 1;
+            display: grid;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-delete {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-delete:hover {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        .portfolio-admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .port-item {
+            background: var(--card-bg);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .port-preview {
+            height: 160px;
+            position: relative;
+            background: #000;
+        }
+
+        .port-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .btn-change-img {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            opacity: 0;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .port-item:hover .btn-change-img {
+            opacity: 1;
+        }
+
+        .port-details {
+            padding: 15px;
+            display: grid;
+            gap: 10px;
+        }
+
+        .logs-wrapper {
+            background: var(--card-bg);
+            border-radius: 15px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .log-row {
+            display: grid;
+            grid-template-columns: 160px 100px 1fr;
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border);
+            align-items: center;
+            gap: 15px;
+            font-size: 0.85rem;
+        }
+
+        .log-row:last-child {
+            border-bottom: none;
+        }
+
+        .log-action {
+            padding: 4px 8px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            font-weight: 700;
+            font-size: 0.65rem;
+            text-align: center;
+        }
+
+        .action-add {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+        }
+
+        .action-delete {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .action-edit {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+
+        .action-save {
+            background: rgba(0, 242, 254, 0.1);
+            color: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            .admin-sidebar {
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .sidebar-nav {
+                display: flex;
+                gap: 10px;
+                padding: 10px;
+                overflow-x: auto;
+            }
+
+            .admin-tab {
+                margin-bottom: 0;
+                white-space: nowrap;
+                padding: 8px 15px;
+            }
+
+            .sidebar-brand,
+            .sidebar-footer {
+                display: none;
+            }
+
+            .admin-top-bar {
+                padding: 15px 20px;
+            }
+
+            .admin-content-container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body class="admin-body">
+
+    <aside class="admin-sidebar">
+        <div class="sidebar-brand">
+            <h2>Sudaba Mammadova</h2>
+            <span>PREMIUM ADMIN</span>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="admin-tab active" data-target="general"><i class="fas fa-id-card"></i> Profil</div>
+            <div class="admin-tab" data-target="about"><i class="fas fa-file-alt"></i> Haqqımda</div>
+            <div class="admin-tab" data-target="experience"><i class="fas fa-history"></i> Təcrübə</div>
+            <div class="admin-tab" data-target="education"><i class="fas fa-graduation-cap"></i> Təhsil</div>
+            <div class="admin-tab" data-target="services"><i class="fas fa-layer-group"></i> Xidmətlər</div>
+            <div class="admin-tab" data-target="portfolio"><i class="fas fa-images"></i> Portfolio</div>
+            <div class="admin-tab" data-target="pricing"><i class="fas fa-dollar-sign"></i> Qiymətlər</div>
+            <div class="admin-tab" data-target="contact"><i class="fas fa-address-book"></i> Əlaqə</div>
+            <div class="admin-tab" data-target="logs"><i class="fas fa-list-ul"></i> Loglar</div>
+        </nav>
+        <div class="sidebar-footer">
+            <button class="admin-logout" id="btnLogout"><i class="fas fa-power-off"></i> Çıxış</button>
+        </div>
+    </aside>
+
+    <main class="admin-main">
+        <header class="admin-top-bar">
+            <div class="top-bar-info">
+                <h1 id="tabTitle">Profil Məlumatları</h1>
+                <p id="adminUserEmail">Yüklənir...</p>
+            </div>
+            <button class="btn-save-floating" id="btnGlobalSave">
+                <i class="fas fa-check-circle"></i> Saxla
+            </button>
+        </header>
+
+        <div class="admin-content-container">
+            <div id="general" class="admin-content active">
+                <div class="section-card">
+                    <div class="card-header"><i class="fas fa-id-card"></i> Əsas Məlumatlar</div>
+                    <div class="input-grid">
+                        <div class="field"><label>Ad Soyad</label><input type="text" id="adminName"></div>
+                        <div class="field"><label>Peşə</label><input type="text" id="adminTitle"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="about" class="admin-content">
+                <div class="section-card">
+                    <div class="card-header"><i class="fas fa-file-alt"></i> Bioqrafiya & Şəkil</div>
+                    <div style="display: flex; gap: 30px; align-items: flex-start;">
+                        <div class="field" style="flex: 0 0 200px;">
+                            <label>Profil Şəkli</label>
+                            <div class="port-preview" style="width:200px; height:250px; border-radius:20px; overflow:hidden;">
+                                <img id="aboutImagePreview" src="assets/about_me.png">
+                                <button class="btn-change-img" onclick="triggerAboutImg()">Dəyiş</button>
+                            </div>
+                        </div>
+                        <div class="field" style="flex: 1;">
+                            <label>Haqqımda Mətni</label>
+                            <textarea id="adminAboutText" rows="12"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="experience" class="admin-content">
+                <div class="content-header">
+                    <h3>İş Təcrübəsi</h3><button class="btn-add" onclick="addItem('experience')"><i
+                            class="fas fa-plus"></i> Əlavə et</button>
+                </div>
+                <div id="experienceList" class="items-grid"></div>
+            </div>
+
+            <div id="education" class="admin-content">
+                <div class="content-header">
+                    <h3>Təhsil & Kurslar</h3><button class="btn-add" onclick="addItem('education')"><i
+                            class="fas fa-plus"></i> Əlavə et</button>
+                </div>
+                <div id="educationList" class="items-grid"></div>
+            </div>
+
+            <div id="services" class="admin-content">
+                <div class="content-header">
+                    <h3>Xidmətlər</h3><button class="btn-add" onclick="addItem('services')"><i class="fas fa-plus"></i>
+                        Əlavə et</button>
+                </div>
+                <div id="servicesList" class="items-grid"></div>
+            </div>
+
+            <div id="portfolio" class="admin-content">
+                <div class="content-header">
+                    <h3>Portfolio</h3><button class="btn-add" onclick="addItem('portfolio')"><i class="fas fa-plus"></i>
+                        Yeni İş</button>
+                </div>
+                <div id="portfolioList" class="portfolio-admin-grid"></div>
+            </div>
+
+            <div id="pricing" class="admin-content">
+                <div class="content-header">
+                    <h3>Qiymətlər</h3><button class="btn-add" onclick="addItem('pricing')"><i class="fas fa-plus"></i>
+                        Əlavə et</button>
+                </div>
+                <div id="pricingList" class="items-grid"></div>
+            </div>
+
+            <div id="contact" class="admin-content">
+                <div class="section-card">
+                    <div class="card-header"><i class="fas fa-address-book"></i> Əlaqə</div>
+                    <div class="input-grid">
+                        <div class="field"><label>WhatsApp</label><input type="text" id="adminWhatsapp"></div>
+                        <div class="field"><label>Gmail</label><input type="email" id="adminGmail"></div>
+                        <div class="field"><label>LinkedIn</label><input type="url" id="adminLinkedin"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="logs" class="admin-content">
+                <div class="content-header">
+                    <h3>Sistem Logları</h3><button class="btn-add" id="btnRefreshLogs"><i class="fas fa-sync"></i>
+                        Yenilə</button>
+                </div>
+                <div id="logsList" class="logs-wrapper"></div>
+            </div>
+        </div>
+
+        <input type="file" id="portfolioFilePicker" accept="image/*" style="display:none;">
+        <input type="file" id="aboutFilePicker" accept="image/*" style="display:none;">
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB7OScQBGmIm0B7KnXr64ANZsAJ5BQcI5A",
+            authDomain: "mywebsite-3d84d.firebaseapp.com",
+            projectId: "mywebsite-3d84d",
+            storageBucket: "mywebsite-3d84d.firebasestorage.app",
+            messagingSenderId: "541643962659",
+            appId: "1:541643962659:web:7666eb6830b5c48b217496",
+            measurementId: "G-TY3CFBFJ5M"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let localData = { services: [], prices: [], experience: [], education: [], portfolio: [], name: "", title: "", about: "", aboutImage: "assets/about_me.png", gmail: "", linkedin: "", whatsapp: "" };
+        let currentPortfolioIndex = -1;
+
+        onAuthStateChanged(auth, (user) => {
+            if (!user) window.location.href = 'login.html';
+            else {
+                document.getElementById('adminUserEmail').textContent = user.email;
+                loadData();
+            }
+        });
+
+        document.getElementById('btnLogout').onclick = () => signOut(auth);
+
+        // Tab Switching
+        document.querySelectorAll('.admin-tab').forEach(tab => {
+            tab.onclick = () => {
+                document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.admin-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.target).classList.add('active');
+                document.getElementById('tabTitle').textContent = tab.textContent.trim();
+                if (tab.dataset.target === 'logs') renderLogs();
+            };
+        });
+
+        async function loadData() {
+            const docRef = doc(db, "siteSettings", "main");
+            const snap = await getDoc(docRef);
+            if (snap.exists()) {
+                localData = { ...localData, ...snap.data() };
+                
+                // İlk dəfə təhsil bölməsini doldurmaq üçün (əgər boşdursa)
+                if (!localData.education || localData.education.length === 0) {
+                    localData.education = [
+                        { badge: 'Kurs', title: 'Graphic Design', description: 'Müasir dizayn prinsipləri, brendinq və vizual kommunikasiya sahəsində peşəkar kurslar.' },
+                        { badge: 'Kurs', title: 'Motion Design', description: 'Animasiya, video qrafika və dinamik vizual məzmunun yaradılması üzrə dərslər.' }
+                    ];
+                }
+
+                document.getElementById('adminName').value = (localData.name || "").replace(/Mahmudova/gi, 'Mammadova');
+                document.getElementById('adminTitle').value = localData.title || "";
+                document.getElementById('adminAboutText').value = localData.about || "";
+                if (localData.aboutImage) document.getElementById('aboutImagePreview').src = localData.aboutImage;
+                document.getElementById('adminGmail').value = localData.gmail || "";
+                document.getElementById('adminLinkedin').value = localData.linkedin || "";
+                document.getElementById('adminWhatsapp').value = localData.whatsapp || "";
+                renderLists();
+            }
+        }
+
+        function renderLists() {
+            renderExperience(); renderEducation(); renderServices(); renderPricing(); renderPortfolio();
+        }
+
+        function renderEducation() {
+            const c = document.getElementById('educationList'); c.innerHTML = '';
+            localData.education.forEach((edu, i) => {
+                const div = document.createElement('div'); div.className = 'list-item';
+                div.innerHTML = `<div class="item-inputs">
+                    <input type="text" value="${edu.badge || ''}" onchange="updateVal('education',${i},'badge',this.value)" placeholder="Badge (məs: Kurs)">
+                    <input type="text" value="${edu.title || ''}" onchange="updateVal('education',${i},'title',this.value)" placeholder="Kurs Adı">
+                    <textarea onchange="updateVal('education',${i},'description',this.value)" placeholder="Təsvir">${edu.description || ''}</textarea>
+                </div><button class="btn-delete" onclick="removeItem('education',${i})"><i class="fas fa-trash"></i></button>`;
+                c.appendChild(div);
+            });
+        }
+
+        function renderExperience() {
+            const c = document.getElementById('experienceList'); c.innerHTML = '';
+            localData.experience.forEach((exp, i) => {
+                const div = document.createElement('div'); div.className = 'list-item';
+                div.innerHTML = `<div class="item-inputs">
+                    <input type="text" value="${exp.company}" onchange="updateVal('experience',${i},'company',this.value)" placeholder="Şirkət">
+                    <input type="text" value="${exp.role}" onchange="updateVal('experience',${i},'role',this.value)" placeholder="Vəzifə">
+                </div><button class="btn-delete" onclick="removeItem('experience',${i})"><i class="fas fa-trash"></i></button>`;
+                c.appendChild(div);
+            });
+        }
+
+        function renderServices() {
+            const c = document.getElementById('servicesList'); c.innerHTML = '';
+            localData.services.forEach((s, i) => {
+                const div = document.createElement('div'); div.className = 'list-item';
+                div.innerHTML = `<div class="item-inputs">
+                    <input type="text" value="${s.icon}" onchange="updateVal('services',${i},'icon',this.value)" placeholder="Icon">
+                    <input type="text" value="${s.title}" onchange="updateVal('services',${i},'title',this.value)" placeholder="Başlıq">
+                    <textarea onchange="updateVal('services',${i},'list',this.value)">${Array.isArray(s.list) ? s.list.join(', ') : s.list}</textarea>
+                </div><button class="btn-delete" onclick="removeItem('services',${i})"><i class="fas fa-trash"></i></button>`;
+                c.appendChild(div);
+            });
+        }
+
+        function renderPricing() {
+            const c = document.getElementById('pricingList'); c.innerHTML = '';
+            localData.prices.forEach((p, i) => {
+                const div = document.createElement('div'); div.className = 'list-item';
+                div.innerHTML = `<div class="item-inputs">
+                    <input type="text" value="${p.item}" onchange="updateVal('prices',${i},'item',this.value)" placeholder="Xidmət">
+                    <input type="text" value="${p.price}" onchange="updateVal('prices',${i},'price',this.value)" placeholder="Qiymət">
+                </div><button class="btn-delete" onclick="removeItem('prices',${i})"><i class="fas fa-trash"></i></button>`;
+                c.appendChild(div);
+            });
+        }
+
+        function renderPortfolio() {
+            const c = document.getElementById('portfolioList'); c.innerHTML = '';
+            localData.portfolio.forEach((w, i) => {
+                const div = document.createElement('div'); div.className = 'port-item';
+                div.innerHTML = `<div class="port-preview"><img src="${w.imgUrl}"><button class="btn-change-img" onclick="triggerUp(${i})">Dəyiş</button></div>
+                <div class="port-details"><input type="text" value="${w.title}" onchange="updateVal('portfolio',${i},'title',this.value)"><button class="btn-delete" style="width:100%" onclick="removeItem('portfolio',${i})">Sil</button></div>`;
+                c.appendChild(div);
+            });
+        }
+
+        window.updateVal = (type, i, field, val) => { localData[type][i][field] = val; };
+        window.addItem = (type) => {
+            if (type === 'experience') localData.experience.push({ company: '', role: '' });
+            else if (type === 'services') localData.services.push({ icon: '✨', title: '', list: '' });
+            else if (type === 'pricing') localData.prices.push({ item: '', price: '' });
+            else if (type === 'education') localData.education.push({ badge: 'Kurs', title: '', description: '' });
+            else if (type === 'portfolio') localData.portfolio.push({ imgUrl: '', title: 'Yeni' });
+            renderLists();
+        };
+        window.removeItem = (type, i) => { if (confirm('Silinsin?')) { localData[type].splice(i, 1); renderLists(); } };
+        window.triggerUp = (i) => { currentPortfolioIndex = i; document.getElementById('portfolioFilePicker').click(); };
+        
+        document.getElementById('portfolioFilePicker').onchange = (e) => {
+            const file = e.target.files[0];
+            if (file && file.size < 800000) {
+                const reader = new FileReader();
+                reader.onload = (ev) => { localData.portfolio[currentPortfolioIndex].imgUrl = ev.target.result; renderPortfolio(); };
+                reader.readAsDataURL(file);
+            } else if (file) alert('Max 800KB');
+        };
+
+        window.triggerAboutImg = () => { document.getElementById('aboutFilePicker').click(); };
+        
+        document.getElementById('aboutFilePicker').onchange = (e) => {
+            const file = e.target.files[0];
+            if (file && file.size < 800000) {
+                const reader = new FileReader();
+                reader.onload = (ev) => { 
+                    localData.aboutImage = ev.target.result; 
+                    document.getElementById('aboutImagePreview').src = ev.target.result;
+                };
+                reader.readAsDataURL(file);
+            } else if (file) alert('Max 800KB');
+        };
+
+        async function saveLog(action, details) {
+            await addDoc(collection(db, "logs"), { action, details, timestamp: serverTimestamp(), user: auth.currentUser.email });
+        }
+
+        async function renderLogs() {
+            const c = document.getElementById('logsList'); c.innerHTML = '<p style="padding:20px;">Yüklənir...</p>';
+            const q = query(collection(db, "logs"), orderBy("timestamp", "desc"), limit(20));
+            const snap = await getDocs(q); c.innerHTML = '';
+            snap.forEach(d => {
+                const l = d.data(); const date = l.timestamp ? l.timestamp.toDate().toLocaleString() : '...';
+                const div = document.createElement('div'); div.className = 'log-row';
+                div.innerHTML = `<div>${date}</div><div class="log-action action-${l.action}">${l.action}</div><div>${l.details}</div>`;
+                c.appendChild(div);
+            });
+        }
+        document.getElementById('btnRefreshLogs').onclick = renderLogs;
+
+        document.getElementById('btnGlobalSave').onclick = async () => {
+            const btn = document.getElementById('btnGlobalSave'); btn.disabled = true; btn.textContent = '...';
+            try {
+                const finalData = {
+                    ...localData,
+                    name: document.getElementById('adminName').value,
+                    title: document.getElementById('adminTitle').value,
+                    about: document.getElementById('adminAboutText').value,
+                    gmail: document.getElementById('adminGmail').value,
+                    linkedin: document.getElementById('adminLinkedin').value,
+                    whatsapp: document.getElementById('adminWhatsapp').value,
+                    aboutImage: localData.aboutImage || "assets/about_me.png",
+                    education: localData.education,
+                    services: localData.services.map(s => ({
+                        ...s, list: typeof s.list === 'string' ? s.list.split(',').map(i => i.trim()) : s.list
+                    }))
+                };
+                await setDoc(doc(db, "siteSettings", "main"), finalData);
+                await saveLog('save', 'Dəyişikliklər saxlanıldı');
+                alert('Uğurla yadda saxlanıldı!');
+            } catch (e) { alert(e.message); }
+            finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> Saxla'; }
+        };
+    </script>
+</body>
+
+</html>
