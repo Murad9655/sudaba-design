@@ -5,23 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Firebase Giriş | Admin Panel</title>
     <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="admin-body" style="justify-content: center; align-items: center;">
 
-    <div class="login-container">
-        <h2 style="margin-bottom: 20px; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Firebase Giriş</h2>
+    <div class="login-container" id="loginStep1">
+        <h2 style="margin-bottom: 20px; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Admin Panel Giriş</h2>
         <form id="loginForm">
-            <input type="text" id="username" placeholder="İstifadəçi adı (məs: Murad96)" style="width: 100%; padding: 12px; margin-bottom: 15px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff;" required>
+            <input type="text" id="username" placeholder="İstifadəçi adı" style="width: 100%; padding: 12px; margin-bottom: 15px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff;" required>
             <input type="password" id="password" placeholder="Şifrə" style="width: 100%; padding: 12px; margin-bottom: 20px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff;" required>
-            <button type="submit" class="admin-btn-save" style="width: 100%;">Daxil ol</button>
+            <button type="submit" id="btnContinue" class="admin-btn-save" style="width: 100%;">Davam et <i class="fas fa-arrow-right"></i></button>
         </form>
         <p id="errorMsg" style="color: #f87171; margin-top: 15px; font-size: 0.9rem; display: none;"></p>
-        <p style="margin-top: 20px; font-size: 0.7rem; color: var(--text-muted);">*Firebase Console-dan yaratdığınız məlumatları daxil edin.</p>
     </div>
+
+    <div class="login-container" id="loginStep2" style="display: none;">
+        <h2 style="margin-bottom: 10px; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Təsdiq Kodu</h2>
+        <p style="color: var(--text-dim); font-size: 0.85rem; margin-bottom: 20px;">Nömrənizə göndərilən 6 rəqəmli kodu daxil edin.</p>
+        <form id="verificationForm">
+            <input type="text" id="verificationCode" placeholder="000000" style="width: 100%; padding: 12px; margin-bottom: 20px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 1.5rem; text-align: center; letter-spacing: 5px;" required maxlength="6">
+            <button type="submit" id="btnVerify" class="admin-btn-save" style="width: 100%;">Təsdiqlə və Giriş et</button>
+        </form>
+        <p id="verifyErrorMsg" style="color: #f87171; margin-top: 15px; font-size: 0.9rem; display: none;"></p>
+        <button id="btnBack" style="background:transparent; border:none; color:var(--primary); margin-top:15px; cursor:pointer;"><i class="fas fa-chevron-left"></i> Geri qayıt</button>
+    </div>
+
+    <!-- Firebase Recaptcha Container -->
+    <div id="recaptcha-container"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB7OScQBGmIm0B7KnXr64ANZsAJ5BQcI5A",
@@ -35,25 +50,89 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = getFirestore(app);
 
-        document.getElementById('loginForm').addEventListener('submit', (e) => {
+        let confirmationResult = null;
+
+        // Initialize Recaptcha
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+            'size': 'invisible',
+            'callback': (response) => {
+                // reCAPTCHA solved, allow signInWithPhoneNumber.
+            }
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const user = document.getElementById('username').value;
             const pass = document.getElementById('password').value;
             const errorMsg = document.getElementById('errorMsg');
+            const btn = document.getElementById('btnContinue');
 
-            // Firebase-ə email lazımdır, ona görə username-in sonuna @domain.com əlavə edirik
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Yoxlanılır...';
+            errorMsg.style.display = 'none';
+
             const email = user.includes('@') ? user : user + "@admin.com";
 
-            signInWithEmailAndPassword(auth, email, pass)
-                .then((userCredential) => {
-                    window.location.href = 'admin.html';
-                })
-                .catch((error) => {
-                    errorMsg.style.display = 'block';
-                    errorMsg.textContent = "Giriş xətası: " + error.code;
-                });
+            try {
+                // 1. Email/Password Login
+                await signInWithEmailAndPassword(auth, email, pass);
+                
+                // 2. Fetch Security Phone from Firestore
+                const docRef = doc(db, "siteSettings", "main");
+                const snap = await getDoc(docRef);
+                let phone = "+994504071423"; // Default if not found
+                
+                if (snap.exists() && snap.data().securityPhone) {
+                    phone = snap.data().securityPhone;
+                }
+
+                // 3. Trigger SMS
+                const appVerifier = window.recaptchaVerifier;
+                confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
+                
+                // 4. Show Step 2
+                document.getElementById('loginStep1').style.display = 'none';
+                document.getElementById('loginStep2').style.display = 'block';
+                
+            } catch (error) {
+                console.error(error);
+                errorMsg.style.display = 'block';
+                errorMsg.textContent = "Giriş xətası: " + (error.code === 'auth/wrong-password' ? 'Şifrə yanlışdır' : error.code);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Davam et <i class="fas fa-arrow-right"></i>';
+            }
         });
+
+        document.getElementById('verificationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const code = document.getElementById('verificationCode').value;
+            const errorMsg = document.getElementById('verifyErrorMsg');
+            const btn = document.getElementById('btnVerify');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Təsdiqlənir...';
+            errorMsg.style.display = 'none';
+
+            try {
+                await confirmationResult.confirm(code);
+                window.location.href = 'admin.html';
+            } catch (error) {
+                console.error(error);
+                errorMsg.style.display = 'block';
+                errorMsg.textContent = "Kod yanlışdır və ya müddəti bitib.";
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Təsdiqlə və Giriş et';
+            }
+        });
+
+        document.getElementById('btnBack').onclick = () => {
+            document.getElementById('loginStep1').style.display = 'block';
+            document.getElementById('loginStep2').style.display = 'none';
+        };
     </script>
 </body>
 </html>

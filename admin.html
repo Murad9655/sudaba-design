@@ -467,6 +467,7 @@
             <div class="admin-tab" data-target="portfolio"><i class="fas fa-images"></i> Portfolio</div>
             <div class="admin-tab" data-target="pricing"><i class="fas fa-dollar-sign"></i> Qiymətlər</div>
             <div class="admin-tab" data-target="contact"><i class="fas fa-address-book"></i> Əlaqə</div>
+            <div class="admin-tab" data-target="security"><i class="fas fa-shield-alt"></i> Təhlükəsizlik</div>
             <div class="admin-tab" data-target="logs"><i class="fas fa-list-ul"></i> Loglar</div>
         </nav>
         <div class="sidebar-footer">
@@ -566,6 +567,31 @@
                 </div>
             </div>
 
+            <div id="security" class="admin-content">
+                <div class="section-card">
+                    <div class="card-header"><i class="fas fa-lock"></i> Şifrəni Dəyiş</div>
+                    <div class="input-grid">
+                        <div class="field"><label>Cari Şifrə</label><input type="password" id="oldPassword" placeholder="Cari şifrənizi daxil edin"></div>
+                        <div class="field"><label>Yeni Şifrə</label><input type="password" id="newPassword" placeholder="Yeni şifrə"></div>
+                        <div class="field"><label>Yeni Şifrə (Təkrar)</label><input type="password" id="confirmPassword" placeholder="Yeni şifrəni təkrarla"></div>
+                    </div>
+                    <button class="btn-save-floating" id="btnUpdatePassword" style="margin-top: 20px; width: auto;">
+                        <i class="fas fa-key"></i> Şifrəni Yenilə
+                    </button>
+                </div>
+
+                <div class="section-card">
+                    <div class="card-header"><i class="fas fa-phone-alt"></i> 2FA Təsdiq Nömrəsi</div>
+                    <div class="input-grid">
+                        <div class="field">
+                            <label>Təsdiq Kodu Göndəriləcək Nömrə</label>
+                            <input type="text" id="adminSecurityPhone" placeholder="+994XXXXXXXXX">
+                            <small style="color: var(--text-dim); margin-top: 5px;">*Giriş zamanı bu nömrəyə SMS kod göndəriləcək. Format: +994504071423</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div id="logs" class="admin-content">
                 <div class="content-header">
                     <h3>Sistem Logları</h3><button class="btn-add" id="btnRefreshLogs"><i class="fas fa-sync"></i>
@@ -581,7 +607,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signOut, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -598,7 +624,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let localData = { services: [], prices: [], experience: [], education: [], portfolio: [], name: "", title: "", about: "", aboutImage: "assets/about_me.png", gmail: "", linkedin: "", whatsapp: "" };
+        let localData = { services: [], prices: [], experience: [], education: [], portfolio: [], name: "", title: "", about: "", aboutImage: "assets/about_me.png", gmail: "", linkedin: "", whatsapp: "", securityPhone: "+994504071423" };
         let currentPortfolioIndex = -1;
 
         onAuthStateChanged(auth, (user) => {
@@ -644,6 +670,7 @@
                 document.getElementById('adminGmail').value = localData.gmail || "";
                 document.getElementById('adminLinkedin').value = localData.linkedin || "";
                 document.getElementById('adminWhatsapp').value = localData.whatsapp || "";
+                document.getElementById('adminSecurityPhone').value = localData.securityPhone || "+994504071423";
                 renderLists();
             }
         }
@@ -775,6 +802,7 @@
                     gmail: document.getElementById('adminGmail').value,
                     linkedin: document.getElementById('adminLinkedin').value,
                     whatsapp: document.getElementById('adminWhatsapp').value,
+                    securityPhone: document.getElementById('adminSecurityPhone').value,
                     aboutImage: localData.aboutImage || "assets/about_me.png",
                     education: localData.education,
                     services: localData.services.map(s => ({
@@ -786,6 +814,49 @@
                 alert('Uğurla yadda saxlanıldı!');
             } catch (e) { alert(e.message); }
             finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> Saxla'; }
+        };
+
+        // Password Update Logic
+        document.getElementById('btnUpdatePassword').onclick = async () => {
+            const oldPass = document.getElementById('oldPassword').value;
+            const newPass = document.getElementById('newPassword').value;
+            const confirmPass = document.getElementById('confirmPassword').value;
+
+            if (!oldPass || !newPass || !confirmPass) {
+                alert("Zəhmət olmasa bütün xanaları doldurun.");
+                return;
+            }
+
+            if (newPass !== confirmPass) {
+                alert("Yeni şifrələr uyğun gəlmir.");
+                return;
+            }
+
+            const btn = document.getElementById('btnUpdatePassword');
+            btn.disabled = true;
+            btn.textContent = 'Yenilənir...';
+
+            try {
+                const user = auth.currentUser;
+                const credential = EmailAuthProvider.credential(user.email, oldPass);
+                
+                await reauthenticateWithCredential(user, credential);
+                await updatePassword(user, newPass);
+                
+                await saveLog('edit', 'Şifrə dəyişdirildi');
+                alert("Şifrə uğurla yeniləndi!");
+                
+                // Clear fields
+                document.getElementById('oldPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+            } catch (e) {
+                console.error(e);
+                alert("Xəta baş verdi: " + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-key"></i> Şifrəni Yenilə';
+            }
         };
     </script>
 </body>
